@@ -1,0 +1,59 @@
+<!--
+
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="libraries/underscore.js"></script>
+	<script type="text/javascript" src="libraries/jquery.js"></script>
+	<script type="text/javascript" src="CloudGrid.js"></script>
+	<script type="text/javascript">
+	    jQuery(document).ready(function(){
+		var data = [
+		    {
+			'id': 1,
+			'title': 'orange',
+			'price': '89.33'
+		    },
+		    {
+			'id': 2,
+			'title': 'apple',
+			'price': '9.33'
+		    },
+		    {
+			'id': 3,
+			'title': 'chocolate',
+			'price': '10.00'
+		    },
+		    {
+			'id': 4,
+			'title': 'marmalade',
+			'price': '90'
+		    }
+		],
+		    options = {
+			parentID: "#CloudGrid",
+			map: {
+			    "id": "ID",
+			    "title": "Title",
+			    "price": "Price"
+			},
+			events: {
+			    'cg_selected': 'onSelected'
+			},
+			'onSelected': function(){
+			    testCloudGrid.remove();
+			    console.log('Selected');
+			}
+		    };
+		    testCloudGrid = new CloudGrid(data, options);
+		    testCloudGrid.render();
+	    });
+	</script>
+    </head>
+    <body>
+	<div id="CloudGrid"></div>
+    </body>
+</html>
