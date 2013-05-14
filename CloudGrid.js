@@ -41,9 +41,9 @@
 	var CloudGrid = function(data, options) {
 		var defaultOptions = {
 			url: "",
-			template: '<tr><% _.each(map, function(title, index){%><td><%= record[index] %></td><%}); %></tr>',
+			rowTemplate: '<tr><% _.each(map, function(title, index){%><td class="cg-r-<%= index %>"><%= record[index] %></td><%}); %></tr>',
 			ajaxData: {},
-			parentTemplate: '<table class="cg-table"><% if(!_.isUndefined(map)){%><thead><tr><% _.each(map, function(title){%> <th><%= title %></th><%}); %></tr></thead><%}%><tbody></tbody></table>',
+			parentTemplate: '<table class="cg-table"><% if(!_.isUndefined(map)){%><thead><tr><% _.each(map, function(title, index){%> <th class="cg-h-<%= index %>"><%= title %></th><%}); %></tr></thead><%}%><tbody></tbody></table>',
 			bodySelector: 'tbody',
 			dataType: 'json',
 			sortable: true,
@@ -55,7 +55,7 @@
 		this.data = [];
 		this.options = (_.isEmpty(options)) ? defaultOptions : $.extend(true, defaultOptions, options);
 		this.gridSelector = selector = this.options.parentID + ' ' + this.options.bodySelector;
-		this.selectedItem = [];
+		this.selectedItems = [];
 
 		//Initialize the Grid
 		this.initialize = function() {
@@ -91,7 +91,7 @@
 					'map': this.options.map,
 					'record': record
 				},		
-				markup = _.template(this.options.template, data);
+				markup = _.template(this.options.rowTemplate, data);
 			markup = $(markup).first().attr('cgid', key);
 			return markup;
 		};
@@ -104,6 +104,29 @@
 			} else {
 				this.disable();
 			}
+		};
+		
+		this.onRowClick = function(e) {
+			e.stopPropagation();
+			if(this.options.enabled === false){
+				return;
+			}
+			
+			var selectedItem = $(e.currentTarget).first().attr('cgid');
+			if(e.ctrlKey) {
+				this.selectedItems.push(selectedItem);
+			} else {
+				$(this.gridSelector+' [class=cg_selected]').removeClass('cg_selected');
+				this.selectedItems = [selectedItem];
+			}
+			
+			$(e.currentTarget).addClass('cg_selected');
+			$(e.currentTarget).trigger('cg_selected', this);
+		};
+		
+		this.onRowDblClick = function(e) {
+			e.stopPropagation();
+			$(e.currentTarget).trigger('cg_dblClick', this);
 		};
 	};
 
@@ -149,35 +172,52 @@
 				this.addRow(dataSet[i]);
 			}
 		},		
-		onRowClick: function(e) {
-			e.stopPropagation();
-			if(this.options.enabled === false){
-				return;
+		remove: function(ids) {
+			ids || (ids = {});
+			//if ids passed remove ids not selectedItems
+			var allIDs = (_.isEmpty(ids)) ? this.selectedItems : ids;
+			for(var i =0, length = allIDs.length; i < length; i++){
+				this.data.splice(allIDs[i], 1);
 			}
 			
-			var selectedItem = $(e.currentTarget).first().attr('cgid');
-			if(e.ctrlKey) {
-				this.selectedItem.push(selectedItem);
-			} else {
-				$(this.gridSelector+' [class=cg_selected]').removeClass('cg_selected');
-				this.selectedItem = [selectedItem];
+			if(_.isEmpty(ids)){
+				this.selectedItems = [];
 			}
 			
-			$(e.currentTarget).addClass('cg_selected');
-			$(e.currentTarget).trigger('cg_selected', e);
-		},
-		onRowDblClick: function(e) {
-			e.stopPropagation();
-		},
-		remove: function() {
-			//Remove data from array
-			//this.data.splice(this.selectedItem, 1);
-			this.selectedItem = [];
 			this.reset();
 		},
 		removeAll: function(){
 			this.clear();
 			this.data = [];
+		},
+		get: function(id){
+			return this.data[id];
+		},
+		update: function(id, data){
+			var record = this.data[id];
+			if(typeof record === 'undefined'){
+				return false;
+			}
+			
+			for(var key in data){
+				if(typeof record[key] === 'undefined'){
+					record[key] = data[key];
+					continue;
+				}
+				
+				if(record[key] === data[key]){
+					continue;
+				}
+				
+				record[key] = data[key];
+			}
+			
+			this.data[id] = record;
+			
+			//Redraw Grid
+			this.reset();
+			
+			return true;
 		},
 		//Fetch data from server
 		fetch: function() {
