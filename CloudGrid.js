@@ -59,11 +59,12 @@
 
 	//Initialize the Grid
 	this.initialize = function() {
-	    if ((_.isUndefined(this.options.parentTemplate)) && (this.options.parentTemplate === '')) {
-		return;
-	    }
-	    //Render main view
-	    this.renderGrid();
+	    if ((!_.isUndefined(this.options.parentTemplate)) && (this.options.parentTemplate === '')) {
+                            this.gridSelector = selector = this.options.parentID;
+	    } else {
+                            //Render main view
+                            this.renderGrid();
+                       }
 	    //Append row if not empty
 	    this.addDataSet(data);
 	    //Attach Events issued by the user
@@ -71,7 +72,7 @@
 	};
 
 	this.append = function(row, recordId) {
-	    $(this.gridSelector).append(this.renderRow(row, recordId));
+                      $(this.gridSelector.trim()).append(this.renderRow(row, recordId));
 	};
 
 	this.attachEvents = function() {
@@ -87,15 +88,10 @@
 
 	//Paint all Grid view with parent container
 	this.renderRow = function(record, key) {
-	    var data = {
-		'map': this.options.map,
-		'record': record
-	    },
-	    markup = _.template(this.options.rowTemplate, data);
-	    markup = $(markup).first().attr('cgid', key);
-	    return markup;
+                      var markup = _.template(this.options.rowTemplate, record);
+	    return $(markup).first().attr('cgid', key);
 	};
-
+	
 	//Paint all Grid view with parent container
 	this.renderGrid = function() {
 	    $(this.options.parentID).html(_.template(this.options.parentTemplate, this.options));
@@ -113,6 +109,7 @@
 	    }
 
 	    var selectedItem = $(e.currentTarget).first().attr('cgid');
+	    //@todo fix mac does not work
 	    if (e.ctrlKey) {
 		this.selectedItems.push(selectedItem);
 	    } else {
